@@ -1,3 +1,13 @@
+This code is personalized code of https://github.com/yancborges/achievement-bot
+
+Changed:
+ - achievement sets, multiple score types
+ - message archieve, tag stat
+ - validity check and replies
+ - deactive some features (e.g. send icon of achievement)
+ - change some code policies (e.g. target -> user_name)
+
+------------------------------------------------------------
 # IwakuraBot / Achievement bot
 
 This code is a discord API bot, which give
