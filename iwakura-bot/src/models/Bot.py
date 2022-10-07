@@ -237,8 +237,18 @@ class Bot:
 
         if valid:
             self.update_tag_stats(user_name, tags)
+            
+            # check keys:
+            if not self.db_client.key_existence(user_name, 'daily'):
+                self.db_client.update_author(user_name, {"daily": 0})
+            if not self.db_client.key_existence(user_name, 'last_day'):
+                self.db_client.update_author(user_name, {"last_day": 0})
+            if not self.db_client.key_existence(user_name, 'sequence'):
+                self.db_client.update_author(user_name, {"sequence": 0})
+
+            if self.db_client.get_author(user_name)['daily'] == 0 and self.db_client.get_author(user_name)['last_day']:
+                self.db_client.increase_author(user_name, {"sequence": 1})
             self.db_client.update_author(user_name, {"daily": 1}, upsert=True)
-            self.db_client.update_author(user_name, {"sequence": 1})
             self.db_client.update_author(user_name, {"buzzer_beater": buzzer_beater}, upsert=True)
             self.db_client.update_author(user_name, {"early_bird": early_bird}, upsert=True)
         return valid
@@ -263,7 +273,7 @@ class Bot:
         print(f'**********uri: {MONGO_URI}')
         client_mongo = MongoClient(MONGO_URI, connect=False)
         # client_mongo = MongoClient(MONGO_URI, connect=False, ssl=True, ssl_cert_reqs=ssl.CERT_NONE)
-        self.db_client = DbClient(client_mongo, "achievement-bot", self.environment)
+        self.db_client = DbClient(client_mongo, "achievement_bot", self.environment)
 
     def check_daily_reset(self, timestamp, channel):
         """
@@ -274,7 +284,7 @@ class Bot:
         """
         sys = self.db_client.get("Sys", {})
         if len(sys) == 0:
-            last_day = datetime(2022, 10, 2, 22, 0, 0, 0)
+            last_day = datetime(2022, 10, 5, 22, 0, 0, 0)
             self.db_client.insert("Sys", {"last_day": last_day})
         else:
             last_day = sys[0]['last_day']
@@ -285,7 +295,11 @@ class Bot:
             while timestamp > last_day + timedelta(days=i):
                 i += 1
             self.db_client.update("Sys", {}, query={"last_day": last_day + timedelta(days=i-1)})
-            self.db_client.update_many(table='Author', match={'daily': 1}, query={'daily': 0})
+            if i == 2:
+                self.db_client.update_many(table='Author', match={'daily': 1}, query={'daily': 0, 'last_day': 1})
+                self.db_client.update_many(table='Author', match={'daily': 0}, query={'daily': 0, 'last_day': 0})
+            else:
+                self.db_client.update_many(table='Author', match={'daily': 1}, query={'daily': 0})
 
     def isintempo(self, timestamp):
         return timestamp < self.db_client.get("Sys", {})[0]['last_day'] + timedelta(days=1)
