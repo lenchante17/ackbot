@@ -5,7 +5,7 @@ def parse(message):
     return list of tag, list of sentence
     """
     items = message.content.split("#")
-    splitters = ['.\n', '.', '\n']
+    splitters = ['.\n', '?\n', '.', '?', '\n']
     tags = []
     sentences = []
     for item in items:
@@ -13,17 +13,16 @@ def parse(message):
         if len(chunks) == 1:
             tags += chunks
         else:
-            temp1 = []
-            sentences = []
-            temp0 = item.strip().split(splitters[0])
-            temp0 = remove_blank(temp0)
-            for temp in temp0:
-                temp1 += temp.split(splitters[1])
-            temp1 = remove_blank(temp1)
-            for temp in temp1:
-                sentences += temp.split(splitters[2])
-            sentences = remove_blank(sentences)
+            sentences = item.strip().split(splitters[0])
+            for splitter in splitters[1:]:
+                sentences = split_by_splitter(sentences, splitter) 
     return tags, sentences
+
+def split_by_splitter(sentences, splitter):
+    result = []
+    for sentence in sentences:
+        result += sentence.split(splitter)
+    return remove_blank(result)
 
 def remove_blank(sentences):
     return [sentence.strip() for sentence in sentences if len(sentence) > 1]
