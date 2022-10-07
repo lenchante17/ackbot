@@ -176,6 +176,7 @@ async def on_message(message):
     if message.content.startswith(PREFIX):
         await cmd.manage(message)
     else:
+        # if str(message.channel) == "test":
         if str(message.channel) == "glissando":
             # for testing
             await iwakura.insert_user(message.author.name, message.author.id)
@@ -188,15 +189,18 @@ async def on_message(message):
             if valid:
                 await iwakura.return_success(message.author.name)
                 await iwakura.trigger_achievement(message.author.name, Welcome)
-                await iwakura.trigger_achievement(message.author.name, Fermata)
                 
                 buzzer_beater = iwakura.db_client.get_author(message.author.name)["buzzer_beater"]
-                early_bird = iwakura.db_client.get_author(message.author.name)["early_bird"]
-
                 if buzzer_beater:
-                    await iwakura.trigger_achievement(message.author.name, BuzzerBeater)  
+                    await iwakura.trigger_achievement(message.author.name, BuzzerBeater)
+
+                early_bird = iwakura.db_client.get_author(message.author.name)["early_bird"]
                 if early_bird:
                     await iwakura.trigger_achievement(message.author.name, EarlyBird)
+
+                sequence = iwakura.db_client.get_author(message.author.name)["sequence"]
+                if sequence > 7:
+                    await iwakura.trigger_achievement(message.author.name, Fermata)
             else:
                 await iwakura.return_fail(message.author.name)
 
