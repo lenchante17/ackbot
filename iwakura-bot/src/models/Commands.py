@@ -180,7 +180,7 @@ class IwakuraCommands:
         """
         user_name = context.author.name
         await self.iwakura_client.show_achievements(context, user_name)
-        await context.channel.send('Sent unlocked achievements via PM')
+        #await context.channel.send('Sent unlocked achievements via PM')
 
 
     async def __cmd_play(self, context, text, args):

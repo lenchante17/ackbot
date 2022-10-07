@@ -6,7 +6,7 @@ class DbClient:
     
     # tagging
     def get_table(self, table):
-        return table + '-' + self.environment
+        return table + '_' + self.environment
 
     # element
     def insert(self, table, document):
@@ -14,6 +14,9 @@ class DbClient:
 
     def get(self, table, query):
         return [doc for doc in self.__mongo[self.get_table(table)].find(query)]
+
+    def find(self, table, query):
+        return self.__mongo[self.get_table(table)].find(query)
 
     def get_all(self, table):
         return [doc for doc in self.__mongo[self.get_table(table)].find()]
@@ -39,3 +42,11 @@ class DbClient:
 
     def increase_author(self, user_name, query):
         return self.__mongo[self.get_table("Author")].update_one({"user_name": user_name}, {"$inc":  query})
+    
+    def key_existence(self, user_name, key):
+        return len(list(self.__mongo[self.get_table("Author")].find({"user_name": f'{user_name}', f"{key}": {"$exists": True}})))
+
+    def reset_user(self, user_name):
+        user_id = self.get_author(user_name)["user_id"]
+        self.delete("Author", {"user_name": user_name})
+        self.insert("Author", {"user_name": user_name, "user_id": user_id})
