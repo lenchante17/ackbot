@@ -1,11 +1,21 @@
+This code is personalized code of https://github.com/yancborges/achievement-bot
+
+Changed:
+ - achievement sets, multiple score types
+ - message archive, tag stat
+ - validity check and replies
+ - deactivate some features (e.g. send icon of achievement)
+ - change some code policies (e.g. target -> user_name)
+
+------------------------------------------------------------
 # IwakuraBot / Achievement bot
 
-This code is a discord API bot, which give
+This code is a discord API bot, which gives
 achievements to users based on their behavior.
 This bot is customizable and open source.                                               \
 If you want, you can personalize it to your server :D
 
-## Requeriments
+## Requirements
 
 - discordpy (core)
 - pymongo   (db connection)
@@ -14,11 +24,11 @@ If you want, you can personalize it to your server :D
 
 ## Setup
 
-After getting your discord bot credentials via discord developr portal,
+After getting your discord bot credentials via discord developer portal,
 you need to choose a database. This bot uses *pymongo*, but you can set it
 to use any other no-relational database.
 
-Then, you need to create a .env file contaning the following keys:
+Then, you need to create a .env file containing the following keys:
 
 IWK__API__DISCORD_TOKEN -> Bot credentials                                              \
 IWK__API__MONGO_URI     -> Mongo connection string                                      \
@@ -32,7 +42,7 @@ Values with prefix IWK__ACH__ are images for achievement logos.
 
 Next, you are ready to run main.py file.                                                \
 Bot will automatically connect to all channels
-that it were given access to.
+that it was given access to.
 
 For testing, you can send >health to any channel
 
@@ -47,9 +57,3 @@ be set there. I GUESS it will work fine if this file is properly done.          
 
 
 *Under development*
-
-
-
-
-
- 
