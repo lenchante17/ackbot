@@ -175,8 +175,8 @@ async def on_message(message):
     if message.content.startswith(PREFIX):
         await cmd.manage(message)
     else:
-        if str(message.channel) == "test":
-        # if str(message.channel) == "glissando":
+        # if str(message.channel) == "test":
+        if str(message.channel) == "glissando":
             # for testing
             await iwakura.insert_user(message.author.name, message.author.id)
             tags, series, sentences = parse(message)
