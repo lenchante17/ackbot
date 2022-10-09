@@ -33,7 +33,25 @@ class Accidentals(Achievement):
     
     achievement_name = 'Accidentals'
     achievement_description = 'tag를 많이 써주세요'
-    achievement_earning = '글에 tag를 사용'
+    achievement_earning = '10개의 tag를 사용'
+    score_threshold = {"base": 1}
+    xp = 50
+
+    def __init__(self, discord_user_id, db_client, args=None, kwargs=None):
+        self.args = args
+        self.kwargs = kwargs
+        super().__init__(discord_user_id, self.achievement_name, self.achievement_description, 
+        self.achievement_earning, self.score_threshold, self._score, self.xp, db_client
+        )
+
+    def _score(self):
+        self.score_current = {"base": 1}
+        return True
+class TimeTraveler(Achievement):
+    
+    achievement_name = 'TimeTraveler'
+    achievement_description = '글 주워담기!'
+    achievement_earning = '메시지를 수정함'
     score_threshold = {"base": 1}
     xp = 10
 
@@ -47,6 +65,25 @@ class Accidentals(Achievement):
     def _score(self):
         self.score_current = {"base": 1}
         return True
+
+class Rest(Achievement):
+    achievement_name = 'Rest'
+    achievement_description = '쉿'
+    achievement_earning = '메시지를 삭제함'
+    score_threshold = {"base": 1}
+    xp = 10
+
+    def __init__(self, discord_user_id, db_client, args=None, kwargs=None):
+        self.args = args
+        self.kwargs = kwargs
+        super().__init__(discord_user_id, self.achievement_name, self.achievement_description, 
+        self.achievement_earning, self.score_threshold, self._score, self.xp, db_client
+        )
+
+    def _score(self):
+        self.score_current = {"base": 1}
+        return True
+
 
 class Fermata(Achievement):
     """
@@ -70,7 +107,7 @@ class Fermata(Achievement):
     achievement_description = '꾸준히'
     achievement_earning = '1주 연속으로 글을 제출'
     score_threshold = {"base": 1}
-    xp = 1
+    xp = 100
 
     def __init__(self, discord_user_id, db_client, args=None, kwargs=None):
         self.args = args

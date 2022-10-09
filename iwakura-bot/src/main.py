@@ -8,6 +8,7 @@ Running it allows bot to connect to discord automatically.
 import discord
 
 from discord.ext import commands
+from discord.ext import tasks
 
 from models.Bot import Bot
 from models.utils import *
@@ -62,7 +63,6 @@ async def on_member_join(member):
     """
     await iwakura.insert_user(member.name, member.id)
 
-
 # @client_discord.event
 # async def on_voice_state_update(member, before, after):
 #     """
@@ -90,25 +90,24 @@ async def on_member_join(member):
 #         await iwakura.trigger_achievement(payload.member.id, Mimic)
 
 
-# @client_discord.event
-# async def on_message_edit(before, after):
-#     """
-#     Triggered whenever a message is edited
-#     """
-#     # Ignoring interactions with other bots
-#     if not after.author.bot:
-#         await iwakura.trigger_achievement(after.author.id, TimeTraveler)
+@client_discord.event
+async def on_message_edit(before, after):
+    """
+    Triggered whenever a message is edited
+    """
+    # Ignoring interactions with other bots
+    if not after.author.bot:
+        await iwakura.trigger_achievement(after.author.id, TimeTraveler)
 
 
-# @client_discord.event
-# async def on_message_delete(message):
-#     """
-#     Triggered whenever a message is deleted
-#     """
-#     # Ignoring interactions with other bots
-#     if not message.author.bot:
-#         await iwakura.trigger_achievement(message.author.id, LibraryOfAlexandria)
-#         await iwakura.trigger_achievement(message.author.id, MisleadLatter)
+@client_discord.event
+async def on_message_delete(message):
+    """
+    Triggered whenever a message is deleted
+    """
+    # Ignoring interactions with other bots
+    if not message.author.bot:
+        await iwakura.trigger_achievement(message.author.id, Rest)
 
 
 # @client_discord.event
@@ -176,15 +175,15 @@ async def on_message(message):
     if message.content.startswith(PREFIX):
         await cmd.manage(message)
     else:
-        # if str(message.channel) == "test":
-        if str(message.channel) == "glissando":
+        if str(message.channel) == "test":
+        # if str(message.channel) == "glissando":
             # for testing
             await iwakura.insert_user(message.author.name, message.author.id)
-            tags, sentences = parse(message)
+            tags, series, sentences = parse(message)
 
-            iwakura.check_daily_reset(UTC9(message.created_at), message.channel)
-            await iwakura.record_message(UTC9(message.created_at), message.author.name, tags, sentences, message.content)
-            valid = iwakura.update_scores(UTC9(message.created_at), message.author.name, tags, sentences)
+            await iwakura.check_daily_reset(UTC9(message.created_at), message.channel)
+            await iwakura.record_message(UTC9(message.created_at), message.author.name, tags, series, sentences, message.content)
+            valid = iwakura.update_scores(UTC9(message.created_at), message.author.name, tags, series, sentences)
             
             if valid:
                 await iwakura.return_success(message.author.name)
@@ -201,31 +200,12 @@ async def on_message(message):
                 sequence = iwakura.db_client.get_author(message.author.name)["sequence"]
                 if sequence > 7:
                     await iwakura.trigger_achievement(message.author.name, Fermata)
+
+                tag_div = iwakura.db_client.get_author(message.author.name)["tag_diversity"]
+                if tag_div > 10:
+                    await iwakura.trigger_achievement(message.author.name, Accidentals)
+            
             else:
                 await iwakura.return_fail(message.author.name)
-
-            # # Based on category
-            # await iwakura.trigger_achievement(message.author.id, JoinTheBowdyHouse, args=[config, message])
-
-            # # Based on message content
-            # await iwakura.trigger_achievement(message.author.id, HeraldIntern, args=[message.content])
-            # await iwakura.trigger_achievement(message.author.id, AncientKnowledge, args=[message.content])
-            # await iwakura.trigger_achievement(message.author.id, TheJester, args=message)
-            # await iwakura.trigger_achievement(message.author.id, Lvl20Bard, args=message)
-            # await iwakura.trigger_achievement(message.author.id, Charge, args=message)
-
-            # # Based on channel
-            # await iwakura.trigger_achievement(message.author.id, BeastMaster, args=[config, message])
-            
-            # # No requirement
-            # await iwakura.trigger_achievement(message.author.id, PigeonIntern)
-            # await iwakura.trigger_achievement(message.author.id, PigeonMaster)
-            # await iwakura.trigger_achievement(message.author.id, PigeonCelebrity)
-            # await iwakura.trigger_achievement(message.author.id, PigeonNoble)
-            # await iwakura.trigger_achievement(message.author.id, PigeonDeity)
-            # await iwakura.trigger_achievement(message.author.id, WheelOfFortune, args=[message.content])
-
-            # # Sending links
-            # await iwakura.trigger_achievement(message.author.id, CanineHero, args=[message.content])
 
 client_discord.run(config.get_attr('api', 'discord_token'))
