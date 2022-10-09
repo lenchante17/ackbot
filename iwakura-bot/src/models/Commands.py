@@ -172,6 +172,22 @@ class IwakuraCommands:
         """
         await self.iwakura_client.trigger_achievement(context.author.id, YouTried)
 
+    async def __cmd_status(self, context, text, args):
+
+        # 업적 수
+        # user_xp
+        # tag_diversity
+        # sequence
+        # 오늘
+
+        user_name = context.author.name
+        await self.iwakura_client.send_message(user_name, user_name) # not implemented
+
+    async def __cmd_keywords(self, context, text, args):
+        keywords = await self.iwakura_client.get_random_three_keywords()
+        message = f"랜덤 키워드 1.{keywords[0]} 2.{keywords[1]} 3.{keywords[2]}"
+        user_name = context.author.name
+        await self.iwakura_client.send_message(user_name, message)
 
     async def __cmd_showachievements(self, context, text, args):
         """
