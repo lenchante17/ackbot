@@ -6,9 +6,13 @@ from pymongo import MongoClient
 import os
 import textwrap
 import io
+import _pickle as pk
+import random
 from datetime import datetime, timedelta
+from datetime import time
 
 import asyncio
+from discord.ext import tasks
 
 from .GivenAchievement import GivenAchievement
 from . import BehaviorAchievements
@@ -178,6 +182,11 @@ class Bot:
         #     await context.author.send(file=discord.File(fp=image_binary, filename='achievements.png'))
         print('Sent achievements to', context.author.name)
 
+    async def send_message(self, user_name, message):
+        user_id = self.db_client.get_author(user_name)['user_id']
+        user = await self.discord_client.fetch_user(user_id)
+        await user.send(content=message)
+
     async def return_success(self, user_name):
         user_id = self.db_client.get_author(user_name)["user_id"]
         user = await self.discord_client.fetch_user(user_id)
@@ -190,7 +199,7 @@ class Bot:
         msg = "You failed to send a valid message! (Please check the number of sentences)"
         await user.send(msg)
 
-    async def record_message(self, timestamp, user_name, tags, sentences, raw_message):
+    async def record_message(self, timestamp, user_name, tags, series, sentences, raw_message):
         """
         Record a message and metadata
 
@@ -208,10 +217,10 @@ class Bot:
         message: str
             contents of message
         """
-        self.db_client.insert('message', {'timestamp': timestamp, 'user_name': user_name, 'tags': tags, 'sentences': sentences, 'raw_message': raw_message})
+        self.db_client.insert('message', {'timestamp': timestamp, 'user_name': user_name, 'tags': tags, 'series': series,'sentences': sentences, 'raw_message': raw_message})
             
             
-    def update_scores(self, timestamp, user_name, tags, sentences):
+    def update_scores(self, timestamp, user_name, tags, series, sentences):
         """
         update score for message author
 
@@ -230,7 +239,7 @@ class Bot:
         if self.isintempo(timestamp):
             if timestamp.hour == 21 and timestamp.minute == 59:
                 buzzer_beater = 1
-            if timestamp.hour < 16:
+            if timestamp.hour < 16 and timestamp.hour > 4:
                 early_bird = 1
             
             valid = int(len(sentences) > 2)
@@ -245,12 +254,14 @@ class Bot:
                 self.db_client.update_author(user_name, {"last_day": 0})
             if not self.db_client.key_existence(user_name, 'sequence'):
                 self.db_client.update_author(user_name, {"sequence": 0})
+            if not self.db_client.key_existence(user_name, 'series'):
+                self.db_client.update_author(user_name, {"series": 0})
 
             if self.db_client.get_author(user_name)['daily'] == 0 and self.db_client.get_author(user_name)['last_day']:
                 self.db_client.increase_author(user_name, {"sequence": 1})
-            self.db_client.update_author(user_name, {"daily": 1}, upsert=True)
-            self.db_client.update_author(user_name, {"buzzer_beater": buzzer_beater}, upsert=True)
-            self.db_client.update_author(user_name, {"early_bird": early_bird}, upsert=True)
+                self.db_client.update_author(user_name, {"daily": 1}, upsert=True)
+                self.db_client.update_author(user_name, {"buzzer_beater": buzzer_beater}, upsert=True)
+                self.db_client.update_author(user_name, {"early_bird": early_bird}, upsert=True)
         return valid
 
     def update_tag_stats(self, user_name, tags):
@@ -275,7 +286,19 @@ class Bot:
         # client_mongo = MongoClient(MONGO_URI, connect=False, ssl=True, ssl_cert_reqs=ssl.CERT_NONE)
         self.db_client = DbClient(client_mongo, "achievement_bot", self.environment)
 
-    def check_daily_reset(self, timestamp, channel):
+    async def get_random_three_keywords(self):
+        with open('keywords.pkl', 'rb') as f:
+            keyword = pk.load(f)
+        idx = list(range(len(keyword)))
+        random.shuffle(idx)
+        return [keyword[i] for i in idx[:3]]
+
+    # @tasks.loop(hours=24, time=time(15, 39, 0))
+    # async def daily_reset(self):
+    #     print('a')
+    #     print('b')
+
+    async def check_daily_reset(self, timestamp, channel):
         """
         Daily reset at 10 pm
         
@@ -290,7 +313,12 @@ class Bot:
             last_day = sys[0]['last_day']
 
         if not self.isintempo(timestamp):
-            channel.send("========= 날짜 변경! =========")
+            keywords = await self.get_random_three_keywords()
+            m0 = "========= 날짜 변경! ========="
+            m1 = f"오늘의 랜덤 키워드 1.{keywords[0]} 2.{keywords[1]} 3.{keywords[2]}"
+            m2 = "from https://blog.naver.com/zu_hg/222447687783"
+            await channel.send(f"{m0}\n{m1}\n{m2}")
+            
             i = 2
             while timestamp > last_day + timedelta(days=i):
                 i += 1
@@ -303,7 +331,6 @@ class Bot:
 
     def isintempo(self, timestamp):
         return timestamp < self.db_client.get("Sys", {})[0]['last_day'] + timedelta(days=1)
-
 
     def mount_notication(self, achievement):
         """
