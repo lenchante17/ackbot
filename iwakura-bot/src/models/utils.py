@@ -7,6 +7,7 @@ def parse(message):
     items = message.content.split("#")
     splitters = ['.\n', '?\n', '.', '?', '\n']
     tags = []
+    series = []
     sentences = []
     for item in items:
         chunks = item.strip().split()
@@ -15,8 +16,12 @@ def parse(message):
         else:
             sentences = item.strip().split(splitters[0])
             for splitter in splitters[1:]:
-                sentences = split_by_splitter(sentences, splitter) 
-    return tags, sentences
+                sentences = split_by_splitter(sentences, splitter)
+
+    for tag in tags:
+        if len(tag) > 3 and tag[:3] == '시리즈':
+            series.append(tag[3:])
+    return tags, series, sentences
 
 def split_by_splitter(sentences, splitter):
     result = []
