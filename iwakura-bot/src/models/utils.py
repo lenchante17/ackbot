@@ -5,7 +5,7 @@ def parse(message):
     return list of tag, list of sentence
     """
     items = message.content.split("#")
-    splitters = ['.\n', '?\n', '.', '?', '\n']
+    splitters = ['.\n', '?\n', '!\n', '.', '?', '!', '\n']
     tags = []
     series = []
     sentences = []
