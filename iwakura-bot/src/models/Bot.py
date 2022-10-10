@@ -63,6 +63,18 @@ class Bot:
         self.config = config
         self.connect_to_db()
 
+    def numbering_archieved_message(self):
+        """
+        numbering message in db
+        """
+        self.current_message_id = 0
+        all_messages = self.db_client.get_all('message')
+        for message in all_messages:
+            self.db_client.update('message', match={'raw_message': message['raw_message']}, query={'message_id': self.current_message_id})
+            self.current_message_id += 1
+        self.db_client.insert('Sys', {'current_message_id': self.current_message_id})
+
+
     async def insert_user(self, user_name, user_id):
         self.db_client.update_author(user_name, {'user_id': user_id}, upsert=True)
 
@@ -217,8 +229,9 @@ class Bot:
         message: str
             contents of message
         """
-        self.db_client.insert('message', {'timestamp': timestamp, 'user_name': user_name, 'tags': tags, 'series': series,'sentences': sentences, 'raw_message': raw_message})
-            
+        self.current_message_id = self.db_client.get('Sys', {})['current_message_id']
+        self.db_client.insert('message', {'message_id': self.current_message_id,'timestamp': timestamp, 'user_name': user_name, 'tags': tags, 'series': series,'sentences': sentences, 'raw_message': raw_message})
+        self.db_client.update('Sys', {'current_message_id': self.current_message_id}, {'current_message_id': self.current_message_id + 1})
             
     def update_scores(self, timestamp, user_name, tags, series, sentences):
         """
@@ -248,13 +261,13 @@ class Bot:
             self.update_tag_stats(user_name, tags)
             
             # check keys:
-            if not self.db_client.key_existence(user_name, 'daily'):
+            if not self.db_client.user_key_existence(user_name, 'daily'):
                 self.db_client.update_author(user_name, {"daily": 0})
-            if not self.db_client.key_existence(user_name, 'last_day'):
+            if not self.db_client.user_key_existence(user_name, 'last_day'):
                 self.db_client.update_author(user_name, {"last_day": 0})
-            if not self.db_client.key_existence(user_name, 'sequence'):
+            if not self.db_client.user_key_existence(user_name, 'sequence'):
                 self.db_client.update_author(user_name, {"sequence": 0})
-            if not self.db_client.key_existence(user_name, 'series'):
+            if not self.db_client.user_key_existence(user_name, 'series'):
                 self.db_client.update_author(user_name, {"series": 0})
 
             if self.db_client.get_author(user_name)['daily'] == 0 and self.db_client.get_author(user_name)['last_day']:
@@ -286,6 +299,10 @@ class Bot:
         # client_mongo = MongoClient(MONGO_URI, connect=False, ssl=True, ssl_cert_reqs=ssl.CERT_NONE)
         self.db_client = DbClient(client_mongo, "achievement_bot", self.environment)
 
+        # if each message does not have message id then numbering message
+        if not self.db_client.key_existence('message', key='message_id'):
+            self.numbering_archieved_message()
+
     async def get_random_three_keywords(self):
         with open('keywords.pkl', 'rb') as f:
             keyword = pk.load(f)
@@ -305,12 +322,11 @@ class Bot:
         If we got message check daily reset 
 
         """
-        sys = self.db_client.get("Sys", {})
-        if len(sys) == 0:
+        if not self.db_client.key_existence("Sys", "last_day"):
             last_day = datetime(2022, 10, 5, 22, 0, 0, 0)
             self.db_client.insert("Sys", {"last_day": last_day})
         else:
-            last_day = sys[0]['last_day']
+            last_day = self.db_client.get("Sys",{})[0]['last_day']
 
         if not self.isintempo(timestamp):
             keywords = await self.get_random_three_keywords()
