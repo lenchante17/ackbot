@@ -95,9 +95,9 @@ async def on_message_edit(before, after):
     """
     Triggered whenever a message is edited
     """
-    # Ignoring interactions with other bots
-    if not after.author.bot:
-        await iwakura.trigger_achievement(after.author.id, TimeTraveler)
+    iwakura.db_client.update('message', {'raw_message': before.content}, {'raw_message': after.content})
+    if str(after.channel) == "glissando":
+        await iwakura.trigger_achievement(after.author.name, TimeTraveler)
 
 
 @client_discord.event
@@ -105,9 +105,8 @@ async def on_message_delete(message):
     """
     Triggered whenever a message is deleted
     """
-    # Ignoring interactions with other bots
-    if not message.author.bot:
-        await iwakura.trigger_achievement(message.author.id, Rest)
+    if str(message.channel) == "glissando":
+        await iwakura.trigger_achievement(message.author.name, Rest)
 
 
 # @client_discord.event
