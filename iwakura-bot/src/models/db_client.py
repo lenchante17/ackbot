@@ -43,8 +43,12 @@ class DbClient:
     def increase_author(self, user_name, query):
         return self.__mongo[self.get_table("Author")].update_one({"user_name": user_name}, {"$inc":  query})
     
-    def key_existence(self, user_name, key):
+    def user_key_existence(self, user_name, key):
         return len(list(self.__mongo[self.get_table("Author")].find({"user_name": f'{user_name}', f"{key}": {"$exists": True}})))
+
+    def key_existence(self, table, key=None):
+        return len(list(self.__mongo[self.get_table(table)].find({f"{key}": {"$exists": True}})))
+
 
     def reset_user(self, user_name):
         user_id = self.get_author(user_name)["user_id"]
