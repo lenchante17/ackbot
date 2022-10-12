@@ -72,7 +72,8 @@ class Bot:
         for message in all_messages:
             self.db_client.update('message', match={'raw_message': message['raw_message']}, query={'message_id': self.current_message_id})
             self.current_message_id += 1
-        self.db_client.insert('Sys', {'current_message_id': self.current_message_id})
+        last_day = self.db_client.get('Sys', {})[0]['last_day']
+        self.db_client.update('Sys', {'last_day': last_day}, {'current_message_id': self.current_message_id})
 
 
     async def insert_user(self, user_name, user_id):
@@ -229,10 +230,10 @@ class Bot:
         message: str
             contents of message
         """
-        self.current_message_id = self.db_client.get('Sys', {})['current_message_id']
+        self.current_message_id = self.db_client.get('Sys', {})[0]['current_message_id']
         self.db_client.insert('message', {'message_id': self.current_message_id,'timestamp': timestamp, 'user_name': user_name, 'tags': tags, 'series': series,'sentences': sentences, 'raw_message': raw_message})
         self.db_client.update('Sys', {'current_message_id': self.current_message_id}, {'current_message_id': self.current_message_id + 1})
-            
+
     def update_scores(self, timestamp, user_name, tags, series, sentences):
         """
         update score for message author
@@ -300,8 +301,8 @@ class Bot:
         self.db_client = DbClient(client_mongo, "achievement_bot", self.environment)
 
         # if each message does not have message id then numbering message
-        if not self.db_client.key_existence('message', key='message_id'):
-            self.numbering_archieved_message()
+        # if not self.db_client.key_existence('message', key='message_id'):
+        self.numbering_archieved_message()
 
     async def get_random_three_keywords(self):
         with open('keywords.pkl', 'rb') as f:
